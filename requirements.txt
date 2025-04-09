@@ -1,0 +1,12 @@
+pandas
+numpy
+torch
+scikit-learn
+matplotlib
+torchvision
+kaggle
+jupyter
+webdataset
+pillow
+scikit-learn
+tensorboard

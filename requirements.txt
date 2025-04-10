@@ -10,3 +10,5 @@ webdataset
 pillow
 scikit-learn
 tensorboard
+gdown
+opencv-python

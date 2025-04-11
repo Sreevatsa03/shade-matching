@@ -9,6 +9,8 @@ jupyter
 webdataset
 pillow
 scikit-learn
+scikit-image
 tensorboard
 gdown
 opencv-python
+mediapipe

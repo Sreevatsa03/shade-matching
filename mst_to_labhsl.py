@@ -12,8 +12,8 @@ IMAGE_ROOT = "/Users/sree/mst-e"
 METADATA_CSV = os.path.join(IMAGE_ROOT, "mst-e_image_details.csv")
 OUTPUT_IMAGE_DIR = "cheek_viz"
 PATCH_OUTPUT_DIR = "cheek_patches"
-os.makedirs(os.path.join(IMAGE_ROOT, OUTPUT_IMAGE_DIR), exist_ok=True)
-os.makedirs(os.path.join(IMAGE_ROOT, PATCH_OUTPUT_DIR), exist_ok=True)
+os.makedirs(OUTPUT_IMAGE_DIR, exist_ok=True)
+os.makedirs(PATCH_OUTPUT_DIR, exist_ok=True)
 valid_extensions = ('.jpg', '.jpeg', '.png')
 
 # load metadata
@@ -35,7 +35,7 @@ def rgb_to_hsl_vector(rgb):
     return np.array([h, s, l])
 
 
-def extract_cheek_pixels(image, image_id):
+def extract_cheek_pixels(image, image_id, subject_folder):
     """
     Extract cheek pixels using Mediapipe
     """
@@ -71,9 +71,10 @@ def extract_cheek_pixels(image, image_id):
 
         patch_large = image[max(0, y-20):y+20, max(0, x-20):x+20]
         if patch_large.size > 0:
+            subject_dir = os.path.join(PATCH_OUTPUT_DIR, subject_folder)
+            os.makedirs(subject_dir, exist_ok=True)
             patch_filename = f"{image_id}_cheek_{idx}.jpg"
-            cv2.imwrite(os.path.join(PATCH_OUTPUT_DIR,
-                        patch_filename), patch_large)
+            cv2.imwrite(os.path.join(subject_dir, patch_filename), patch_large)
 
     # Determine if cheek is valid
     if cheek_pixels:
@@ -105,9 +106,10 @@ def extract_cheek_pixels(image, image_id):
 
         patch_large = image[max(0, y-20):y+20, max(0, x-20):x+20]
         if patch_large.size > 0:
+            subject_dir = os.path.join(PATCH_OUTPUT_DIR, subject_folder)
+            os.makedirs(subject_dir, exist_ok=True)
             patch_filename = f"{image_id}_forehead_{idx}.jpg"
-            cv2.imwrite(os.path.join(PATCH_OUTPUT_DIR,
-                        patch_filename), patch_large)
+            cv2.imwrite(os.path.join(subject_dir, patch_filename), patch_large)
 
     cv2.imwrite(os.path.join(OUTPUT_IMAGE_DIR,
                 f"{image_id}_viz.jpg"), img_copy)
@@ -174,13 +176,11 @@ for subject_folder in os.listdir(IMAGE_ROOT):
             continue
 
         mst_level = int(match['mst'].values[0])
-
-        mst_level = int(match['mst'].values[0])
         image = cv2.imread(file_path)
         if image is None:
             continue
 
-        pixels = extract_cheek_pixels(image, image_id)
+        pixels = extract_cheek_pixels(image, image_id, subject_folder)
         if pixels is None:
             pixels = fallback_skin_pixels(image)
 

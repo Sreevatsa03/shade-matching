@@ -14,7 +14,7 @@ def is_valid_patch(img):
     if img is None:
         return False, "invalid image"
 
-    # Check lightness (LAB)
+    # Compute average LAB lightness
     rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     avg_rgb = np.mean(rgb.reshape(-1, 3), axis=0)
     avg_lab = rgb2lab(np.array([[avg_rgb / 255.0]]))[0][0]
@@ -22,7 +22,7 @@ def is_valid_patch(img):
     if L < 30 or L > 90:
         return False, f"lightness out of range (L={L:.1f})"
 
-    # Check skin ratio (HSV)
+    # Check skin ratio in HSV
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     lower = np.array([0, 30, 60], dtype=np.uint8)
     upper = np.array([20, 200, 255], dtype=np.uint8)
@@ -34,20 +34,27 @@ def is_valid_patch(img):
     return True, None
 
 
-# Filter patches
-for fname in os.listdir(PATCH_DIR):
-    if not fname.lower().endswith((".jpg", ".jpeg", ".png")):
+# Walk through cheek_patches/subject_x/
+for subject in os.listdir(PATCH_DIR):
+    subject_path = os.path.join(PATCH_DIR, subject)
+    if not os.path.isdir(subject_path):
         continue
 
-    fpath = os.path.join(PATCH_DIR, fname)
-    img = cv2.imread(fpath)
+    for fname in os.listdir(subject_path):
+        if not fname.lower().endswith((".jpg", ".jpeg", ".png")):
+            continue
 
-    valid, reason = is_valid_patch(img)
-    if valid:
-        cv2.imwrite(os.path.join(OUTPUT_DIR, fname), img)
-    else:
-        log_file.write(f"{fname}: {reason}\n")
+        fpath = os.path.join(subject_path, fname)
+        img = cv2.imread(fpath)
+
+        valid, reason = is_valid_patch(img)
+        if valid:
+            out_dir = os.path.join(OUTPUT_DIR, subject)
+            os.makedirs(out_dir, exist_ok=True)
+            cv2.imwrite(os.path.join(out_dir, fname), img)
+        else:
+            log_file.write(f"{subject}/{fname}: {reason}\n")
 
 log_file.close()
 print(f"Cleaned patches saved to {OUTPUT_DIR}")
-print(f"Skipped files logged in: filtered_out_cheek_patches.txt")
+print(f"Skipped patches logged in: filtered_out_cheek_patches.txt")
